@@ -1,0 +1,20 @@
+# Trend Reels Agent (English-language AI/tech)
+
+A cautious, low-cost-if-eligible GitHub Actions project that checks Google Trends RSS feeds (US/GB/CA/AU), accepts only recent AI/technology topics, requires headlines from at least two distinct sources, and asks Gemini for a short original English script based strictly on those headlines. It produces three original text cards and an approximately 18-second vertical MP4. It does not download or scrape article bodies, photos, clips, or music. Headline-only context is not fact-checking: scripts without enough support are skipped.
+
+## Setup
+
+1. Push the project to a GitHub repository; enable Actions. For local use install Python 3.11+, `pip install -r requirements.txt`, and FFmpeg. Run offline tests with `python -m unittest discover -s tests -v`.
+2. Create a Gemini API key in Google AI Studio. The configurable model defaults to `gemini-3.1-flash-lite` (`GEMINI_MODEL` in Actions variables). Free-tier availability, quotas, model rollout/access, and regional availability can vary by account and country; verify current Google AI Studio pricing/access. “Free” is conditional, not guaranteed. Legacy Gemini 2.5 Flash-Lite availability can be limited for prior users, so this project no longer defaults to it.
+3. For Instagram publishing, configure a Meta app, an Instagram Professional account linked to a Facebook Page, and the required app/account permissions for Instagram content publishing. Create Actions **secrets** `GEMINI_API_KEY`, `IG_USER_ID`, and `PAGE_ACCESS_TOKEN`; never put credentials in repository files. Meta access and token requirements depend on account/app mode and may change.
+4. Under Settings → Pages, choose **GitHub Actions** as the build/deploy source. The workflow uses the Pages artifact/deploy actions and waits for the deployment output URL to serve the MP4 before asking Graph API to create a Reel container.
+5. Recommended Actions **variables**: `AUTO_PUBLISH=false` and `POST_EVERY_DAYS=2` (allowed values: `1` or `2`). Optional variables: `GEMINI_MODEL=gemini-3.1-flash-lite`, `META_API_VERSION` (a currently supported version). Workflow runs daily at 15:17 UTC; cadence is measured from the last confirmed publication. GitHub may delay scheduled jobs and can disable schedules on inactive repositories.
+6. Run the workflow manually with `AUTO_PUBLISH=false`, inspect the `reel-preview` artifact and the deployed video/headlines/sources, then deliberately change the variable to `true` only after manual verification. In true mode the workflow deploys public media, verifies the URL, then creates/polls/publishes a Reel. A failed publication leaves a pending state to avoid an accidental duplicate; inspect and clear/recover it manually before retrying. No network/API call has been tested as part of this repair.
+
+## Video/API behavior and safety
+
+The generated file is H.264, 1080×1920 portrait, 30 fps, AAC 48 kHz, silent, about 18 seconds. Meta's Instagram API Reel specifications allow video duration from **3 seconds to 15 minutes** (subject to current API/account restrictions), so 18 seconds is within the duration range; the previous warning that a Reel must be at least three minutes was incorrect. Other API requirements, account eligibility, media processing, reach, and publishing availability are not guaranteed.
+
+The generator only uses trend headlines and source names in its script prompt and on its cards. It explicitly forbids unsupported details, quantities, causes, predictions, and copied article prose; if the model returns empty/invalid content it skips that topic. AI output can still be wrong, so review the preview. This project uses no scraped copyrighted media; visuals are generated text cards. It is a simple trend signal, not a news verification service.
+
+The project has no guaranteed zero cost. GitHub Actions/Pages, Gemini free quota and regional access, Meta eligibility, and account limits can change. Review current service terms, limits, and pricing. Do not expose secrets in logs or artifacts.
